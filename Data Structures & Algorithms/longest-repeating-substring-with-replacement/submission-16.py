@@ -1,0 +1,69 @@
+class Solution:
+    def characterReplacement(self, s: str, k: int) -> int:
+        # idea use a map char -> (begin, next, end, k)
+        # I only expected to grow to the right, however, it 
+        # is a sliding window algo, so need to be able to move the left
+        # one rather than rest. Hence why 'NEXT' was introduced. 
+        BEGIN, NEXT, END, KVAL = 0, 1, 2, 3
+        seen = {}
+        result = 0
+
+        for index in range(len(s)): 
+            #print(seen)
+            if s[index] in seen: # if character has been seen, need to update value in map
+                char = s[index]
+                value = seen[char]
+                prevEnd = value[END]
+                kVal = value[KVAL]
+                nextVal = value[NEXT] # slide left hand side of window (was last case to consider)
+                if (value[BEGIN] == value[NEXT]):
+                    nextVal = index
+
+                if index - prevEnd > 1: 
+                    # more than 1 means, need to use a K value to reorganise
+                    kVal -= index - prevEnd - 1
+                    if kVal < 0:
+                        # final case to move left window up
+                        # kVal represents how far the index has gone over the available replacements k
+                        # Thus, need to check if the difference between the next index
+                        # is the same as this differnce (kVal).
+                        # only checking if the difference is the same 
+                        # as BEGIN → NEXT must remove exactly the overused replacements
+                        # reasoning: 
+                        # abs(kVal) > (nextVal - value[BEGIN] - 1): -> means that 
+                        # overreplacement gap is too large between the BEGIN and NEXT.
+
+                        # abs(kval) < (nextVal - value[BEGIN] - 1) -> means that a next index appears closer
+                        # to BEGIN than we've gone over-replacement -> ambiguous and tells us nothing....
+                        # also this is always true for things that haven't been seen for a long time 
+                        # therefore that would be incorrect if used as its sets Next pointers with no replacements
+
+                        if abs(kVal) == (nextVal - value[BEGIN] - 1):
+                            # If so, set start pointer to the next pointer, with k being 0 as
+                            # all the replacments have already been used...
+                            data = (nextVal, nextVal, index, 0)
+                            # set k to 0 any others should ruin this
+            
+                        else: 
+                            data = (index, index, index, k) 
+                        seen[s[index]] = data
+                        continue
+                # Only update end point as consecutive character seen       
+                data = (value[BEGIN], nextVal, index, kVal) 
+                seen[s[index]] = data
+                result = max((index - value[BEGIN] + kVal) + 1, result)
+                if result > len(s):  
+                    # resulting string cannot be longer than original string as its replacing characters in a string
+                    result = len(s)
+            else: 
+                data = (index, index, index, k)  # place value in map
+                seen[s[index]] = data
+                result = max(1 + k, result) # set highest count
+        return result
+
+
+
+
+
+
+        
